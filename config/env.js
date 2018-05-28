@@ -34,12 +34,12 @@ class Env {
   }
 
   /**
-   * Github company name.
+   * Github owner name.
    *
    * @return {String}
    */
-  static get GITHUB_COMPANY() {
-    return process.env.GITHUB_COMPANY;
+  static get GITHUB_OWNER() {
+    return process.env.GITHUB_OWNER;
   }
 
   /**

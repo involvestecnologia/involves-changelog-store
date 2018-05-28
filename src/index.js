@@ -2,14 +2,14 @@ require('../config');
 
 const debug = require('debuggler')();
 const Env = require('../config/env');
-const logger = require('../config/logger');
 const octokit = require('@octokit/rest')();
 
-octokit.authenticate({
-  type: 'token',
-  token: Env.GITHUB_TOKEN,
-});
-
+/**
+ * @param {String} owner Github owner username.
+ * @param {String} repo Repository name.
+ * @param {String} labels Comma separated labels.
+ * @return {Promise<Object[]>}
+ */
 const getAllIssues = async (owner, repo, labels = []) => {
   debug(`retrieving issues for: "${owner}:${repo}", with labels: "${labels.join(', ')}"`);
   const issues = [];
@@ -18,7 +18,7 @@ const getAllIssues = async (owner, repo, labels = []) => {
     owner,
     repo,
     labels,
-    state: 'closed',
+    state: 'all',
   });
 
   issues.push(...response.data);
@@ -33,6 +33,11 @@ const getAllIssues = async (owner, repo, labels = []) => {
   return issues;
 };
 
+/**
+ * @param {String} content Content text.
+ * @param {String} tagName Tag name to look inside content.
+ * @return {String[]}
+ */
 const getTagValue = (content, tagName) => {
   const tagRegex = new RegExp(`<${tagName}>([^]*?)</${tagName}>`, 'g');
 
@@ -43,12 +48,20 @@ const getTagValue = (content, tagName) => {
       .trim());
 };
 
+/**
+ * Extract issue information from meta tags.
+ *
+ * @param {Object} issue Github issue object.
+ * @return {{module: string, description: string, notes: Object[], cause: string}}
+ */
 const getInfo = (issue) => {
+  debug(`extracting meta information for issue "${issue.id}"`);
+
   const module = (issue.title).startsWith('//')
     ? issue.title.replace('//', '').split('-')[0].trim()
     : 'UNDEFINED';
 
-  const description = (getTagValue(issue.title, 'GC-DESCRICAO')
+  const description = (getTagValue(issue.body, 'GC-DESCRICAO')
     .pop() || '');
 
   const notes = getTagValue(issue.body, 'GC-NOTA')
@@ -57,7 +70,7 @@ const getInfo = (issue) => {
       inovacoes: getTagValue(note, 'INOVACAO'),
       duvidas: getTagValue(note, 'DUVIDA'),
       correcoes: getTagValue(note, 'CORRECAO'),
-      dataRelease: getTagValue(note, 'DATA_RELEASE').pop(),
+      dataRelease: getTagValue(note, 'DATA-RELEASE').pop(),
     }));
 
   const cause = (getTagValue(issue.body, 'GC-CAUSA')
@@ -78,28 +91,28 @@ const getInfo = (issue) => {
   };
 };
 
-const changelog = async () => {
+/**
+ * @param {Object} config Configuration object.
+ * @return {Promise<Object>}
+ */
+const changelog = async ({
+  GITHUB_TOKEN = Env.GITHUB_TOKEN,
+  GITHUB_OWNER = Env.GITHUB_OWNER,
+  GITHUB_PROJECT = Env.GITHUB_PROJECT,
+  ISSUE_LABELS = Env.ISSUE_LABELS,
+}) => {
   debug('starting changelog analysis');
 
-  const {
-    GITHUB_COMPANY,
-    GITHUB_PROJECT,
-    ISSUE_LABELS,
-  } = Env;
+  debug('initializing github api');
 
-  const issues = await getAllIssues(GITHUB_COMPANY, GITHUB_PROJECT, ISSUE_LABELS.split(','));
+  octokit.authenticate({
+    type: 'token',
+    token: GITHUB_TOKEN,
+  });
 
-  const info = issues.map(getInfo);
+  const issues = await getAllIssues(GITHUB_OWNER, GITHUB_PROJECT, ISSUE_LABELS.split(','));
 
-  console.log(info);
+  return issues.map(getInfo);
 };
 
-changelog()
-  .then(() => {
-    logger.info('Done!');
-    process.exit(0);
-  })
-  .catch((err) => {
-    logger.error(err);
-    process.exit(1);
-  });
+module.exports = changelog;
