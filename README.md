@@ -1,1 +1,1 @@
-# github-changelog
+# github-changelog-store
