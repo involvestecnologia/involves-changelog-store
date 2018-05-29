@@ -5,7 +5,7 @@ const Env = require('../config/env');
 const logger = require('../config/logger');
 const mongoose = require('../config/mongoose');
 const changelog = require('involves-changelog');
-const Issue = require('./issue.model');
+const Log = require('./log.model');
 
 const store = async (config) => {
   config = Object.assign({
@@ -16,17 +16,20 @@ const store = async (config) => {
   await mongoose(config.mongourl);
 
   logger.info('Retrieving changelog...');
-  const issues = await changelog(config);
-  debug('changelog retrieved', issues);
+  const logs = await changelog(config);
+  debug('changelog retrieved', logs);
 
   logger.info('Storing changelog...');
 
-  await Promise.all(issues.map(async (issue) => {
-    const oldIssue = await Issue.findOne({ 'issue.id': issue.issue.id });
-    if (oldIssue) {
-      return Object.assign(oldIssue, issue).save();
+  await Promise.all(logs.map(async (log) => {
+    log.created_at = new Date(log.created_at);
+    log.updated_at = new Date(log.updated_at);
+
+    const oldLog = await Log.findOne({ 'issue.id': log.issue.id });
+    if (oldLog) {
+      return Object.assign(oldLog, log).save();
     }
-    return new Issue(issue).save();
+    return new Log(log).save();
   }));
 };
 

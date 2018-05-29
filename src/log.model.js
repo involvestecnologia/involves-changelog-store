@@ -2,6 +2,17 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
+const IssueSchema = Schema({
+  number: Number,
+  state: String,
+  title: String,
+  labels: [{
+    name: String
+  }],
+  created_at: Date,
+  updated_at: Date,
+});
+
 const NoteSchema = new Schema({
   correcoes: [String],
   duvidas: [String],
@@ -10,10 +21,8 @@ const NoteSchema = new Schema({
   dataRelease: String,
 });
 
-const IssueSchema = new Schema({
-  issue: {
-    type: Schema.Types.Mixed,
-  },
+const LogSchema = new Schema({
+  issue: IssueSchema,
   module: {
     type: String,
   },
@@ -29,6 +38,6 @@ const IssueSchema = new Schema({
   updatedAt: true,
 });
 
-const IssueModel = mongoose.model('Issue', IssueSchema);
+const LogModel = mongoose.model('Log', LogSchema);
 
-module.exports = IssueModel;
+module.exports = LogModel;
