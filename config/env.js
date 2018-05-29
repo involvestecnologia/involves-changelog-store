@@ -23,40 +23,8 @@ class Env {
     return process.env.NODE_ENV || 'development';
   }
 
-  /**
-   * Github access token.
-   *
-   * @see https://github.com/settings/tokens
-   * @return {String}
-   */
-  static get GITHUB_TOKEN() {
-    return process.env.GITHUB_TOKEN;
-  }
-
-  /**
-   * Github owner name.
-   *
-   * @return {String}
-   */
-  static get GITHUB_OWNER() {
-    return process.env.GITHUB_OWNER;
-  }
-
-  /**
-   * Github project name.
-   *
-   * @return {String}
-   */
-  static get GITHUB_PROJECT() {
-    return process.env.GITHUB_PROJECT;
-  }
-
-  /**
-   * Issue labels separated by comma.
-   * @return {String}
-   */
-  static get ISSUE_LABELS() {
-    return process.env.ISSUE_LABELS;
+  static get MONGO_URL() {
+    return process.env.MONGO_URL || 'mongodb://localhost:27017/involves-changelog';
   }
 }
 

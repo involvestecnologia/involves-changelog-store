@@ -5,8 +5,12 @@ const debug = require('debuggler')();
 debug('initializing app configuration');
 
 const Promise = require('./promise');
+const logger = require('./logger');
+const mongoose = require('./mongoose');
 
 module.exports = {
-  Promise,
   Env,
+  Promise,
+  logger,
+  mongoose,
 };
