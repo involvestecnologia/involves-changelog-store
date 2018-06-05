@@ -26,9 +26,7 @@ const store = async (config) => {
     log.updated_at = new Date(log.updated_at);
 
     const oldLog = await Log.findOne({ 'issue.id': log.issue.id });
-    if (oldLog) {
-      return Object.assign(oldLog, log).save();
-    }
+    if (oldLog) return Object.assign(oldLog, log).save();
     return new Log(log).save();
   }));
 };

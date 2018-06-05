@@ -7,7 +7,7 @@ const IssueSchema = Schema({
   state: String,
   title: String,
   labels: [{
-    name: String
+    name: String,
   }],
   created_at: Date,
   updated_at: Date,
