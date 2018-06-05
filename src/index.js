@@ -2,117 +2,35 @@ require('../config');
 
 const debug = require('debuggler')();
 const Env = require('../config/env');
-const octokit = require('@octokit/rest')();
+const logger = require('../config/logger');
+const mongoose = require('../config/mongoose');
+const changelog = require('involves-changelog');
+const Log = require('./log.model');
 
-/**
- * @param {String} owner Github owner username.
- * @param {String} repo Repository name.
- * @param {String} labels Comma separated labels.
- * @return {Promise<Object[]>}
- */
-const getAllIssues = async (owner, repo, labels = []) => {
-  debug(`retrieving issues for: "${owner}:${repo}", with labels: "${labels.join(', ')}"`);
-  const issues = [];
+const store = async (config) => {
+  config = Object.assign({
+    mongourl: Env.MONGO_URL,
+  }, config);
 
-  let response = await octokit.issues.getForRepo({
-    owner,
-    repo,
-    labels,
-    state: 'all',
-  });
+  logger.info('Connecting to the database...');
+  await mongoose(config.mongourl);
 
-  issues.push(...response.data);
+  logger.info('Retrieving changelog...');
+  const logs = await changelog(config);
+  debug('changelog retrieved', logs);
 
-  while (octokit.hasNextPage(response)) {
-    debug(`retrieving next page for: "${owner}:${repo}", with labels: "${labels.join(', ')}"`);
+  logger.info('Storing changelog...');
 
-    response = await octokit.getNextPage(response);
-    issues.push(...response.data);
-  }
+  await Promise.all(logs.map(async (log) => {
+    log.created_at = new Date(log.created_at);
+    log.updated_at = new Date(log.updated_at);
 
-  return issues;
+    const oldLog = await Log.findOne({ 'issue.id': log.issue.id });
+    if (oldLog) {
+      return Object.assign(oldLog, log).save();
+    }
+    return new Log(log).save();
+  }));
 };
 
-/**
- * @param {String} content Content text.
- * @param {String} tagName Tag name to look inside content.
- * @return {String[]}
- */
-const getTagValue = (content, tagName) => {
-  const tagRegex = new RegExp(`<${tagName}>([^]*?)</${tagName}>`, 'g');
-
-  return (content.match(tagRegex) || [])
-    .map(tag => tag
-      .replace(`<${tagName}>`, '')
-      .replace(`</${tagName}>`, '')
-      .trim());
-};
-
-/**
- * Extract issue information from meta tags.
- *
- * @param {Object} issue Github issue object.
- * @return {{module: string, description: string, notes: Object[], cause: string}}
- */
-const getInfo = (issue) => {
-  debug(`extracting meta information for issue "${issue.id}"`);
-
-  const module = (issue.title).startsWith('//')
-    ? issue.title.replace('//', '').split('-')[0].trim()
-    : 'UNDEFINED';
-
-  const description = (getTagValue(issue.body, 'GC-DESCRICAO')
-    .pop() || '');
-
-  const notes = getTagValue(issue.body, 'GC-NOTA')
-    .map(note => ({
-      melhorias: getTagValue(note, 'MELHORIA'),
-      inovacoes: getTagValue(note, 'INOVACAO'),
-      duvidas: getTagValue(note, 'DUVIDA'),
-      correcoes: getTagValue(note, 'CORRECAO'),
-      dataRelease: getTagValue(note, 'DATA-RELEASE').pop(),
-    }));
-
-  const cause = (getTagValue(issue.body, 'GC-CAUSA')
-    .pop() || '')
-    .split('\n')
-    .filter(cause => cause
-      .startsWith('- [x] -'))
-    .map(cause => cause
-      .replace('- [x] -', '')
-      .trim())
-    .pop();
-
-  return {
-    module,
-    description,
-    notes,
-    cause,
-  };
-};
-
-/**
- * @param {Object} config Configuration object.
- * @return {Promise<Object>}
- */
-const changelog = async ({
-  GITHUB_TOKEN = Env.GITHUB_TOKEN,
-  GITHUB_OWNER = Env.GITHUB_OWNER,
-  GITHUB_PROJECT = Env.GITHUB_PROJECT,
-  ISSUE_LABELS = Env.ISSUE_LABELS,
-}) => {
-  debug('starting changelog analysis');
-
-  debug('initializing github api');
-
-  octokit.authenticate({
-    type: 'token',
-    token: GITHUB_TOKEN,
-  });
-
-  const issues = await getAllIssues(GITHUB_OWNER, GITHUB_PROJECT, ISSUE_LABELS.split(','));
-
-  return issues.map(getInfo);
-};
-
-module.exports = changelog;
+module.exports = store;
