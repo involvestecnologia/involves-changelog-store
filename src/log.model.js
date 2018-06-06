@@ -32,7 +32,7 @@ const LogSchema = new Schema({
   cause: {
     type: String,
   },
-  notes: [NoteSchema],
+  note: NoteSchema,
 }, {
   createdAt: true,
   updatedAt: true,

@@ -17,11 +17,13 @@ const store = async (config) => {
 
   logger.info('Retrieving changelog...');
   const logs = await changelog(config);
-  debug('changelog retrieved', logs);
+  debug('changelogs retrieved', (logs || []).length);
 
   logger.info('Storing changelog...');
 
   await Promise.all(logs.map(async (log) => {
+    debug('saving changelog for issue', log.issue.id);
+
     log.created_at = new Date(log.created_at);
     log.updated_at = new Date(log.updated_at);
 
