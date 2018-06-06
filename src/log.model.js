@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const IssueSchema = Schema({
+  id: Number,
   number: Number,
   state: String,
   title: String,

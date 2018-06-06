@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+require('../config');
+
 const argv = require('minimist')(process.argv.slice(2));
 const logger = require('../config/logger');
 const ics = require('../src');

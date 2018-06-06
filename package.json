@@ -1,6 +1,6 @@
 {
   "name": "involves-changelog-store",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "main": "src",
   "scripts": {
     "eslint": "eslint . --ext .js",
@@ -14,7 +14,7 @@
     "debug": "^3.1.0",
     "debuggler": "^1.0.0",
     "dotenv": "^6.0.0",
-    "involves-changelog": "^0.3.6",
+    "involves-changelog": "^0.3.7",
     "minimist": "^1.2.0",
     "mongoose": "^5.1.4",
     "split": "^1.0.1",
