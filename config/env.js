@@ -1,4 +1,5 @@
 const path = require('path');
+const Changelog = require('involves-changelog/config/env');
 
 /**
 * @see https://github.com/motdotla/dotenv#usage
@@ -12,16 +13,11 @@ if (process.env.NODE_ENV === 'test') {
 /**
  * @class Env
  */
-class Env {
+class Env extends Changelog {
   /**
-   * Application context.
-   *
+   * @default 'mongodb://localhost:27017/involves-changelog'
    * @return {String}
    */
-  static get NODE_ENV() {
-    return process.env.NODE_ENV;
-  }
-
   static get MONGO_URL() {
     return process.env.MONGO_URL || 'mongodb://localhost:27017/involves-changelog';
   }
