@@ -1,5 +1,4 @@
 const path = require('path');
-const Changelog = require('involves-changelog/config/env');
 
 /**
 * @see https://github.com/motdotla/dotenv#usage
@@ -9,6 +8,8 @@ if (process.env.NODE_ENV === 'test') {
 } if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: path.resolve(__filename, '../../.env') });
 }
+
+const Changelog = require('involves-changelog/config/env');
 
 /**
  * @class Env
