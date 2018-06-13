@@ -7,33 +7,22 @@ const IssueSchema = Schema({
   number: Number,
   state: String,
   title: String,
-  labels: [{
-    name: String,
-  }],
+  labels: [String],
   created_at: Date,
   updated_at: Date,
 });
 
-const NoteSchema = new Schema({
-  correcoes: [String],
-  duvidas: [String],
-  inovacoes: [String],
-  melhorias: [String],
-  dataRelease: String,
-});
-
 const LogSchema = new Schema({
   issue: IssueSchema,
-  module: {
-    type: String,
-  },
-  description: {
-    type: String,
-  },
-  cause: {
-    type: String,
-  },
-  note: NoteSchema,
+  module: String,
+  description: String,
+  cause: String,
+  note: String,
+  motive: String,
+  priority: String,
+  quality: String,
+  team: String,
+  squad: String,
 }, {
   createdAt: true,
   updatedAt: true,
